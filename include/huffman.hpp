@@ -1,5 +1,5 @@
 //
-//  huffman.h
+//  huffman.hpp
 //  Huffman Compressor
 //
 //  Created by Patricio Beckmann on 24-04-14.
@@ -49,7 +49,7 @@ namespace decode {
     Node* lhs;
     Node* rhs;
     T symbol;
-    const bool IsLeaf() { return !(lhs || rhs); }
+   bool IsLeaf() { return !(lhs || rhs); }
   };
 }
 

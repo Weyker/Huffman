@@ -1,47 +1,99 @@
 #!/bin/bash
 
-FILENAME="bible.txt"
-FILESIZE= "$(ls -lah "$FILENAME" | awk '{ print $5}')"
+print_in_color() {
+    printf "%b" \
+        "$(tput setaf "$2" 2> /dev/null)" \
+        "$1" \
+        "$(tput sgr0 2> /dev/null)"
+}
 
-FILENAMECOMPRESS="bible.char"
-FILESIZETEST= "(ls -lah "$FILENAMECOMPRESS" | awk '{ print $5}')"
-TYPE="-c"
+pgreen() {
+    print_in_color "$1" 2
+}
 
-clear
+ppurple() {
+    print_in_color "$1" 5
+}
 
-./../build/compressor $TYPE $FILENAME $FILENAMECOMPRESS
-echo "$FILESIZETEST vs $FILESIZE"
-./../build/decompressor $FILENAMECOMPRESS bible.orig
-echo "diff: "
-diff bible.orig $FILENAME
-echo "\n"
+pblue() {
+  print_in_color "$1" 12
+}
 
-FILENAMECOMPRESS="bible.short"
-FILESIZETEST= $(ls -lah "$FILENAMECOMPRESS" | awk '{ echo $5}')
-TYPE="-s"
+pred() {
+    print_in_color "$1" 1
+}
 
-./../build/compressor $TYPE $FILENAME $FILENAMECOMPRESS
-./../build/decompressor $FILENAMECOMPRESS bible.orig
-echo "diff: "
-diff bible.orig $FILENAME
-echo "\n"
+pyellow() {
+    print_in_color "$1" 3
+}
 
-FILENAMECOMPRESS="bible.int"
-FILESIZETEST= $(ls -lah "$FILENAMECOMPRESS" | awk '{ echo $5}')
-TYPE="-i"
+pbold() {
+  printf  "%b" \
+          "$(tput bold "$2" 2> /dev/null)" \
+          "$1" \
+          "$(tput sgr0 2> /dev/null)"
+}
 
-./../build/compressor $TYPE $FILENAME $FILENAMECOMPRESS
-./../build/decompressor $FILENAMECOMPRESS bible.orig
-echo "diff: "
-diff bible.orig $FILENAME
-echo "\n"
+pinfo() {
+  pblue "\n==> "
+  pbold "$1\n\n"
+}
 
-FILENAMECOMPRESS="bible.long"
-FILESIZETEST= $(ls -lah "$FILENAMECOMPRESS" | awk '{ echo $5}')
-TYPE="-l"
+pquestion() {
+  pyellow "   [?] $1"
+}
 
-./../build/compressor $TYPE $FILENAME $FILENAMECOMPRESS
-./../build/decompressor $FILENAMECOMPRESS bible.orig
-echo "diff: "
-diff bible.orig $FILENAME
-echo "\n"
+perror() {
+  pred "   [✖] [$1] $2\n"
+}
+
+psuccess() {
+    pgreen "   [✔] $1\n"
+}
+
+pwarning() {
+    pyellow "   [!] $1\n"
+}
+
+abort() {
+  pbold "...Aborting\n" && exit 1
+}
+
+declare -r FILE="bible"
+declare -r FILESIZE="$(ls -lah "$FILE".txt | awk '{ print $5 }')"
+
+compressor() {
+  local TYPE="$1"
+  local FILENAME="$2"
+  local FILENAMECOMPRESS="$2.$3"
+  
+  pinfo "Compressing with $3"
+  if [ ! -f "$FILENAME" ]; then
+    perror "File" "$FILENAME does not exist"
+    return 1
+  fi
+  local filesizetest=""
+  ./../build/bin/compressor "$TYPE" "$FILENAME" "$FILENAMECOMPRESS"
+  filesizetest="$(ls -lah "$FILENAMECOMPRESS" | awk '{ print $5 }')"
+
+  if [ ! -f "$FILENAMECOMPRESS" ]; then
+    perror "Compression" "The compression was filed"
+    return 1
+  fi
+  
+  psuccess "Compression ok: Original filesize-> $FILESIZE ; Compressed filesize-> $filesizetest"
+  return 0
+
+}
+
+main() {
+  cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
+  local filename="$FILE.txt"
+  compressor "-c" "$filename" "char" || abort
+  compressor "-s" "$filename" "short" || abort
+  compressor "-i" "$filename" "int" || abort
+  compressor "-l" "$filename" "long" || abort
+}
+
+
+main

@@ -2,22 +2,27 @@
 #include <string>
 #include <fstream>
 
-#include "huffman.h"
+#include <huffman.hpp>
 
-void Help(const std::string &namefile){
-  std::cout << "Usage: " << namefile << " <compress_file> <output_file> \n";
+inline void Help(const std::string &namefile){
+  std::cout << "Usage: " << namefile << " [Compress Type] <input_file> <output_file> \n";
+  std::cout << "COMPRESS TYPES:\n";
+  std::cout << "\t-c: char\n";
+  std::cout << "\t-s: short\n";
+  std::cout << "\t-i: int\n";
+  std::cout << "\t-l: long\n";
   std::cout << "EXAMPLE:\n";
   std::cout << '\t' << namefile <<" -c test.txt test.comp\n\n";
 }
 
 int main(int argc, const char* argv[]) {
-  if (argc != 3) {
+  if (argc != 4) {
     Help(argv[0]);
     return 0;
   }
   
-  std::string input_file = argv[1];
-  std::string output_file = argv[2];
+  std::string input_file = argv[2];
+  std::string output_file = argv[3];
   
   std::ifstream input(input_file, std::ios::binary);
   std::ofstream output(output_file, std::ios::binary);
@@ -27,16 +32,17 @@ int main(int argc, const char* argv[]) {
     return -1;
   }
   
-  char value = input.get();
+  char type = argv[1][1];
   
-  switch (value) {
+  switch (type) {
     case 'c':
     {
+      output.put(type);
       Huffman<char> huffchar;
       
-      std::cout << "Decompressing whit char... \n";
+      std::cout << "Compressing whit char... \n";
       
-      huffchar.Decompress(input, output);
+      huffchar.Compress(input, output);
       
       input.close();
       output.close();
@@ -44,10 +50,11 @@ int main(int argc, const char* argv[]) {
     }
     case 's':
     {
+      output.put(type);
       Huffman<short> huffshort;
-      std::cout << "Decompressing whit short... \n";
+      std::cout << "Compressing whit short... \n";
       
-      huffshort.Decompress(input, output);
+      huffshort.Compress(input, output);
       
       input.close();
       output.close();
@@ -55,12 +62,12 @@ int main(int argc, const char* argv[]) {
     }
     case 'i':
     {
-      using T = int;
+      output.put(type);
       Huffman<int> huffint;
       
-      std::cout << "Decompressing whit int... \n";
+      std::cout << "Compressing whit int... \n";
       
-      huffint.Decompress(input, output);
+      huffint.Compress(input, output);
       
       input.close();
       output.close();
@@ -68,17 +75,25 @@ int main(int argc, const char* argv[]) {
     }
     case 'l':
     {
+      output.put(type);
       Huffman<std::int64_t> hufflong;
       
-      std::cout << "Decompressing whit long... \n";
+      std::cout << "Compressing whit long... \n";
       
-      hufflong.Decompress(input, output);
+      hufflong.Compress(input, output);
       
       input.close();
       output.close();
       break;
     }
+      
+    default:
+      std::cout << "\nError: " <<'-' << type << " is not a compress type.\n\n";
+      Help(argv[0]);
+      break;
   }
   
   return 0;
+  
+  
 }
